@@ -10,11 +10,16 @@ module.exports = function (app) {
     app.route('/getAllChat')
         .get(Chat.getAllChat)
     app.route('/insertChat')
-        .get(Chat.insert);
+        .post(Chat.insert);
     app.route('/insertMany')
         .get(Chat.insertMany)
     app.route('/chatCount')
         .get(Chat.count);
     app.route('/index')
         .get(Chat.index);
+    app.route('/deleteAllChat')
+        .delete(Chat.deleteAllChat);
+    app.route('/updateChat')
+        .put(Chat.updateChat);
+        
 }

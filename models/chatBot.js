@@ -1,15 +1,15 @@
 var mongoose = require('mongoose');
-
+var autoIncrement = require('mongoose-auto-increment');
 var chatSchema = mongoose.Schema({
-	contentType: { type: String, required: true },
-	contentLevel: { type: String, required: true },
-	content: { type: String, required: true },
-	domain: { type: String, required: true },
-	contentId: { type: Number},
+	contentType: { type: String },
+	contentLevel: { type: String},
+	content: { type: String},
+	domain: { type: String},
+	//contentId: { type: Number},
 	words:[{type:String}],
 	testPhrase:{type:String},
 });
-
+autoIncrement.initialize(mongoose.connection);
 // Sets the createdAt parameter equal to the current time
 chatSchema.pre('save', next => {
   now = new Date();
@@ -19,4 +19,5 @@ chatSchema.pre('save', next => {
   next();
 });
 
+chatSchema.plugin(autoIncrement.plugin,{model:'Chat',field:'chatId'})
 module.exports = mongoose.model('Chat', chatSchema);

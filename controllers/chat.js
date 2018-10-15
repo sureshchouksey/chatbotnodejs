@@ -52,19 +52,48 @@ exports.getAll = (req, res) => {
                         return_changed_case:true,
                         remove_duplicates: true
 
-                    });
-    //res.send(extraction_result);
+                    });    
     console.log(extraction_result);
-    Chat.find({ words: { $all: extraction_result } }, (err, docs) => {
-    if (err) { return loggererror.info(err); }
-    loggerinfo.info("Search result of getAll Service", docs);
-    if(docs.length>=1){
-      res.json({Answer:docs[0].content});
+    if(extraction_result.length >=2){
+      Chat.find({ words: { $all: extraction_result } }, (err, docs) => {
+        if (err) { return loggererror.info(err); }
+        loggerinfo.info("Search result of getAll Service", docs);
+        if(docs.length>1){
+          //res.json({Answer:docs[0].content});
+          var result = docs.map(a => a.testPhrase);
+          res.json(result);
+        }else if(docs.length==1){
+          res.json({Answer:docs[0].content});
+        }
+        else{
+          var saveData = {
+            "contentType":"Text",
+            "contentLevel":"Public",
+            "content":"",
+            "domain":req.body.domain?req.body.domain:'',
+            "words":extraction_result,
+            "testPhrase":req.body.question
+          }
+          //res.send('data is not available');
+          var obj = new Chat(saveData);
+          obj.save((err, item) => {
+            // 11000 is the code for duplicate key error
+            console.log(err,item);
+            if (err && err.code === 11000) {
+              res.sendStatus(400);
+            }
+            if (err) {
+              return loggererror.info(err);
+            }
+            res.status(200).json({message:'this question is not available',item:item});
+          });
+        }
+      });  
     }
     else{
-      res.send('data is not available');
+      res.send('Question is not appropriate');
     }
-  });  
+    
 }
 
 exports.getAllChat = (req, res) => {  
@@ -99,7 +128,7 @@ exports.insert = (req, res) => {
 	"words":["when","library","close"],
 	"testPhrase":"When is the library close ?"
 }
-  var obj = new Chat(chatData);
+  var obj = new Chat(req.body);
   obj.save((err, item) => {
     // 11000 is the code for duplicate key error
     console.log(err,item);
@@ -138,7 +167,7 @@ exports.insertMany = (req, res) => {
 	"content":"The library is open Daily from 8:00 AM to 18:00 AM",
 	"domain":"Library",
 	"words":["when","library"],
-	"testPhrase":"When is the library open ?"
+	"testPhrase":"When is the library open and close?"
 },{
 	"contentId":"3",
 	"contentType":"Link",
@@ -169,9 +198,27 @@ exports.insertMany = (req, res) => {
           return console.error(err);
       } else {
         console.log("Multiple documents inserted to Collection");
+        res.send('Success')
       }
     });
 }
+
+exports.updateChat = (req,res) =>{
+  let query = {"chatId":req.body.chatId};
+  Chat.findOneAndUpdate(query,req.body,{upsert:true},(err)=>{
+    if(err) { return console.log(err);}
+    res.sendStatus(200);
+  })
+}
+
+exports.deleteAllChat = (req,res)=>{
+  Chat.remove({},(err)=>{
+    if(err) { return console.log(err);}
+    res.sendStatus(200);
+  })
+}
+
+
 exports.readLogFile = (req,res)=>{
   let stream = fs.createReadStream(__dirname + '/my.log')
   , log = new Log('debug', stream);

@@ -15,7 +15,7 @@ let options = {
               }; 
 
 //db connection      
-mongoose.connect("mongodb://localhost:27017/chatbot", options);
+mongoose.connect("mongodb://sureshchouksey:suresh123@ds127843.mlab.com:27843/chatbot", options);
 let db = mongoose.connection;
 db.on('error', console.error.bind(console, 'connection error:'));
 
